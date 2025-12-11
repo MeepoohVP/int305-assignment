@@ -1,58 +1,38 @@
 <template>
-  <div class="p-4">
-    <h2 class="text-lg font-semibold mb-3">
-      เลือกโต๊ะ
-    </h2>
+  <div class="p-12">
+    <h2 class="text-lg font-semibold mb-3">เลือกโต๊ะ</h2>
 
-    <div class="grid grid-cols-3 gap-4">
-      <button
+    <div class="grid grid-cols-7 gap-24 bg-base-200 p-6 rounded-3xl">
+      <div
         v-for="table in tables"
         :key="table.id"
         @click="$emit('select', table)"
-        class="flex flex-col items-center justify-center rounded-2xl border p-3
-               shadow-sm hover:shadow-md transition transform hover:-translate-y-0.5
-               focus:outline-none focus:ring-2 focus:ring-offset-2"
-        :class="statusStyles[table.status]?.container || statusStyles.default.container"
+        class="aspect-square mb-1 flex items-center justify-center rounded-xl border text-xl font-bold"
+        :class="statusStyles[table.status]?.icon || statusStyles.default.icon"
       >
-        <!-- ไอคอนโต๊ะแบบกลาง ๆ (ไม่ผูกธีม) -->
-        <div class="w-10 h-10 mb-1 flex items-center justify-center">
-          <div
-            class="w-9 h-5 rounded-md border"
-            :class="statusStyles[table.status]?.icon || statusStyles.default.icon"
-          >
-            <!-- เส้นด้านในให้เหมือน top โต๊ะ -->
-            <div class="w-full h-[2px] mt-[2px] opacity-60"></div>
-          </div>
-        </div>
-
-        <!-- label โต๊ะ -->
-        <span class="text-[11px] text-gray-600">
-          โต๊ะ
-        </span>
-
-        <!-- หมายเลขโต๊ะ -->
-        <span class="text-lg font-bold">
-          {{ table.tableNumber }}
-        </span>
-
-        <!-- สถานะ -->
-        <span
-          class="mt-1 text-[11px]"
-          :class="statusStyles[table.status]?.text || statusStyles.default.text"
-        >
-          {{ statusLabel(table.status) }}
-        </span>
-      </button>
+        {{ table.tableNumber }}
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-const props = defineProps({
-  tables: {
-    type: Array,
-    default: () => [],
-  },
+import db from "@/firebase/init";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { onMounted, ref } from "vue";
+
+const tables = ref([]);
+
+onMounted(async () => {
+  const tableCollection = collection(db, "tables");
+  const snapshot = await getDocs(
+    query(tableCollection, orderBy("tableNumber"))
+  );
+  tables.value = snapshot.docs.map((e) => ({
+    id: e.id,
+    ...e.data(),
+  }));
+  console.log(tables.value);
 });
 
 // ---- config สี/สไตล์ต่อสถานะ (ถ้าเปลี่ยนธีมก็มาแก้แค่ตรงนี้) ----

@@ -1,21 +1,19 @@
-// ---- ตั้งค่า Firebase ของโปรเจกต์เรา ----
-import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  Timestamp,
-} from "firebase/firestore";
+// ---------- IMPORT ----------
+import admin from "firebase-admin";
+import { readFileSync } from "fs";
 
-const firebaseConfig = {
+// ---------- INITIALIZE ADMIN SDK ----------
+const serviceAccount = JSON.parse(
+  readFileSync("./serviceAccountKey.json", "utf8")
+);
 
-};
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = admin.firestore();
 
-// ---------------- CATEGORY (ใหม่ตามที่ให้มา) ----------------
-
+// ---------------- CATEGORY ----------------
 const categorySeed = [
   { name: "ซูชิหน้าต่าง ๆ (Nigiri)", order: 1, isActive: true },
   { name: "ซาชิมิ (Sashimi)", order: 2, isActive: true },
@@ -29,8 +27,7 @@ const categorySeed = [
   { name: "ชุดเมนูพิเศษ", order: 10, isActive: true },
 ];
 
-// ---------------- SAMPLE MENUS (สุ่ม category หลังจากสร้าง category) ----------------
-
+// ---------------- MENU ----------------
 const menuSeed = [
   { name: "แซลมอนซูชิ", price: 40, description: "ซูชิหน้าแซลมอน", isAvailable: true },
   { name: "ทามาโกะซูชิ", price: 30, description: "ซูชิหน้าไข่หวาน", isAvailable: true },
@@ -50,33 +47,37 @@ const tableSeed = Array.from({ length: 10 }).map((_, idx) => ({
   status: "Empty",
   currentOrderId: "",
   isActive: true,
-  lastActivity: Timestamp.now(),
+  lastActivity: admin.firestore.Timestamp.now(),
 }));
 
-// ---------------- UTIL ----------------
 function randomOrderStatus() {
-  const statuses = ["Open", "Waiting_for_Service", "Ready_for_Billing", "Paid", "Canceled"];
+  const statuses = [
+    "Open",
+    "Waiting_for_Service",
+    "Ready_for_Billing",
+    "Paid",
+    "Canceled",
+  ];
   return statuses[Math.floor(Math.random() * statuses.length)];
 }
 
 // ---------------- SEED FUNCTION ----------------
-
 async function seed() {
   try {
-    console.log("Seeding Sushi Data...");
+    console.log("🚀 Seeding Sushi Data...");
 
-    // 1) CATEGORIES
-    const categoriesCol = collection(db, "categories");
+    // 1) Categories
+    const categoriesCol = db.collection("categories");
     const categoryDocs = [];
 
     for (const cat of categorySeed) {
-      const docRef = await addDoc(categoriesCol, cat);
+      const docRef = await categoriesCol.add(cat);
       categoryDocs.push({ id: docRef.id, ...cat });
     }
-    console.log("✔ categories inserted:", categoryDocs.length);
+    console.log("✔ categories:", categoryDocs.length);
 
-    // 2) MENUS (map categoryId แบบหมุน)
-    const menusCol = collection(db, "menus");
+    // 2) Menus
+    const menusCol = db.collection("menus");
     const menuDocs = [];
 
     for (let i = 0; i < menuSeed.length; i++) {
@@ -88,69 +89,67 @@ async function seed() {
         categoryId: cat.id,
       };
 
-      const docRef = await addDoc(menusCol, data);
+      const docRef = await menusCol.add(data);
       menuDocs.push({ id: docRef.id, ...data });
     }
-    console.log("✔ menus inserted:", menuDocs.length);
+    console.log("✔ menus:", menuDocs.length);
 
-    // 3) TABLES
-    const tablesCol = collection(db, "tables");
+    // 3) Tables
+    const tablesCol = db.collection("tables");
     const tableDocs = [];
 
     for (const t of tableSeed) {
-      const docRef = await addDoc(tablesCol, t);
+      const docRef = await tablesCol.add(t);
       tableDocs.push({ id: docRef.id, ...t });
     }
-    console.log("✔ tables inserted:", tableDocs.length);
+    console.log("✔ tables:", tableDocs.length);
 
-    // 4) ORDERS (10 orders)
-    const ordersCol = collection(db, "orders");
+    // 4) Orders (10 orders)
+    const ordersCol = db.collection("orders");
 
     for (let i = 0; i < 10; i++) {
       const table = tableDocs[i % tableDocs.length];
       const status = randomOrderStatus();
 
-      // random menu items
       const itemCount = 2 + Math.floor(Math.random() * 2); // 2–3 items
       let totalPrice = 0;
       const items = [];
 
       for (let j = 0; j < itemCount; j++) {
         const menu = menuDocs[(i + j) % menuDocs.length];
-        const quantity = 1 + Math.floor(Math.random() * 3);
+        const qty = 1 + Math.floor(Math.random() * 3);
 
         items.push({
           menuId: menu.id,
           menuName: menu.name,
           pricePerUnit: menu.price,
-          quantity,
+          quantity: qty,
           status: "Pending",
           customOption: {},
           options: [],
           note: "",
         });
 
-        totalPrice += menu.price * quantity;
+        totalPrice += menu.price * qty;
       }
 
-      await addDoc(ordersCol, {
+      await ordersCol.add({
         tableId: table.id,
         status,
-        createdAt: Timestamp.now(),
         totalPrice,
         isPaid: status === "Paid",
+        createdAt: admin.firestore.Timestamp.now(),
         note: "",
         items,
       });
     }
 
-    console.log("✔ orders inserted: 10");
-    console.log("🎉 DONE: All Seeds Completed!");
+    console.log("✔ orders: 10");
+    console.log("🎉 DONE — All Seeds Completed");
 
   } catch (err) {
     console.error("❌ Seed Error:", err);
   }
 }
 
-// RUN
 seed();
