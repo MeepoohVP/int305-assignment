@@ -1,4 +1,4 @@
-import Table from '@/components/Table.vue'
+import TableView from '@/views/TableView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -7,8 +7,13 @@ const router = createRouter({
     {
       path: '/',
       name: 'Home',
-      component: Table
-    }
+      component: TableView
+    },
+    {
+      path: '/t/:tableCode',
+      name: ''
+    },
+    {}
   ],
 })
 

@@ -34,3 +34,5 @@ coverage
 
 # Vitest
 __screenshots__/
+serviceAccountKey.json
+./src/firebase/init.js
