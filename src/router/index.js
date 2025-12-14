@@ -1,3 +1,4 @@
+import TableOrderView from '@/views/TableOrderView.vue'
 import TableView from '@/views/TableView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
@@ -11,7 +12,8 @@ const router = createRouter({
     },
     {
       path: '/t/:tableCode',
-      name: ''
+      name: 'Table',
+      component: TableOrderView
     },
     {}
   ],
