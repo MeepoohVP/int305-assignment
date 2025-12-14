@@ -268,8 +268,7 @@ async function seed() {
           pricePerUnit: menu.price,
           quantity: qty,
           status: "Pending",
-          customOption: pickCustomOptionFromMenu(menu),
-          options: [],
+          options: pickCustomOptionFromMenu(menu),
           note: "",
         });
 
