@@ -80,7 +80,7 @@ const changeCategory = async (categoryId) => {
           <figure>
             <img
               class="aspect-square object-cover"
-              :src="'/' + menu.name + '.png'"
+              :src="'https://meepoohvp.github.io/int305-assignment-image/menus/' + menu.name + '.png'"
               :alt="menu.name"
             />
           </figure>
