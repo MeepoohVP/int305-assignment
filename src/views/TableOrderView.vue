@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   limit,
   onSnapshot,
   query,
@@ -97,7 +98,13 @@ const placeOrder = async () => {
   if (order.value) {
     const orderDoc = doc(db, "orders", order.value.id);
     const updateOrder = await updateDoc(orderDoc, {
-      items: arrayUnion(selectionMenu.value),
+      items: arrayUnion(...selectionMenu.value),
+      totalPrice: increment(
+        selectionMenu.value.reduce(
+          (sum, item) => sum + item.pricePerUnit * item.quantity,
+          0
+        )
+      ),
     });
   } else {
     const orderCollection = collection(db, "orders");
@@ -114,13 +121,16 @@ const placeOrder = async () => {
         0
       ),
     });
-    
-    const updateCurrentOrder = await updateDoc(doc(db, 'tables', table.value.id), {
-      status: 'Occupied',
-      currentOrderId: addOrder.id
-    })
+
+    const updateCurrentOrder = await updateDoc(
+      doc(db, "tables", table.value.id),
+      {
+        status: "Occupied",
+        currentOrderId: addOrder.id,
+      }
+    );
   }
-  selectionMenu.value = {}
+  selectionMenu.value = {};
 };
 
 function formatDate(ts) {
@@ -463,7 +473,13 @@ const submitMenu = () => {
             </li>
           </ul>
           <div class="flex justify-center mt-8">
-            <button @click="placeOrder" class="btn btn-primary btn-wide" :disabled="selectionMenu.length===0">สั่งอาหาร</button>
+            <button
+              @click="placeOrder"
+              class="btn btn-primary btn-wide"
+              :disabled="selectionMenu.length === 0"
+            >
+              สั่งอาหาร
+            </button>
           </div>
         </div>
         <div v-else-if="orderTab === 'myOrder' && order" class="">

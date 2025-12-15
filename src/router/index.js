@@ -15,7 +15,9 @@ const router = createRouter({
       name: 'Table',
       component: TableOrderView
     },
-    {}
+    // {
+    //   path: ''
+    // }
   ],
 })
 
