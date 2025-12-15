@@ -1,3 +1,4 @@
+import OrderListView from '@/views/OrderListView.vue'
 import TableOrderView from '@/views/TableOrderView.vue'
 import TableView from '@/views/TableView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -15,9 +16,11 @@ const router = createRouter({
       name: 'Table',
       component: TableOrderView
     },
-    // {
-    //   path: ''
-    // }
+    {
+      path: '/orders',
+      name: 'Orders',
+      component: OrderListView
+    }
   ],
 })
 

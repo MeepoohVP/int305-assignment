@@ -248,6 +248,13 @@ const submitMenu = () => {
 
   clearMenuDetail();
 };
+
+const callStaff = async () => {
+  const tableDoc = doc(db, 'tables', table.value.id)
+  const updateTable = await updateDoc(tableDoc, {
+    status: 'Need_Help'
+  })
+}
 </script>
 <template>
   <Teleport to="body">
@@ -540,6 +547,9 @@ const submitMenu = () => {
           <li class="flex justify-between p-4 font-semibold">
             <p>Total</p>
             <p class="text-right">{{ order.totalPrice.toLocaleString() }}.-</p>
+          </li>
+          <li class="flex justify-center">
+            <button @click="callStaff()" class="btn btn-wide btn-primary">เรียกพนักงาน/เช็คบิล</button>
           </li>
         </div>
       </div>
