@@ -1,14 +1,13 @@
-// ---------- IMPORT ----------
+
 import admin from "firebase-admin";
 import { readFileSync } from "fs";
 
-// ---------- INITIALIZE ADMIN SDK ----------
+
 const serviceAccount = JSON.parse(readFileSync("./serviceAccountKey.json", "utf8"));
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 const db = admin.firestore();
 
-// ---------------- CATEGORY ----------------
-// key ใช้แค่ในโค้ดเพื่อ mapping -> ไม่เขียนลง Firestore
+
 const categorySeed = [
   { key: "nigiri", name: "ซูชิหน้าต่าง ๆ (Nigiri)", order: 1, isActive: true },
   { key: "sashimi", name: "ซาชิมิ (Sashimi)", order: 2, isActive: true },
@@ -22,8 +21,7 @@ const categorySeed = [
   { key: "special", name: "ชุดเมนูพิเศษ", order: 10, isActive: true },
 ];
 
-// ---------------- MENU (30 items) ----------------
-// key ใช้แค่ในโค้ด (ไม่เขียนลง Firestore) / type เก็บไว้เพื่อฟิลเตอร์เมนู
+
 const menuSeed = [
   { type: "nigiri", name: "แซลมอนซูชิ", price: 40, description: "ซูชิหน้าแซลมอน", isAvailable: true },
   { type: "nigiri", name: "ทูน่าซูชิ", price: 45, description: "ซูชิหน้าทูน่า", isAvailable: true },
@@ -67,7 +65,6 @@ const menuSeed = [
   { type: "soup", name: "ราเมงมินิ", price: 89, description: "ราเมงถ้วยเล็ก", isAvailable: true },
 ];
 
-// ---------------- TABLES ----------------
 function makeTableCode(i) {
   const n = String(i).padStart(2, "0");
   return `A${n}`; // A01..A10
@@ -81,7 +78,6 @@ const tableSeed = Array.from({ length: 10 }).map((_, idx) => ({
   lastActivity: admin.firestore.Timestamp.now(),
 }));
 
-// ---------------- utils: delete all docs in collection ----------------
 async function deleteAllDocsInCollection(collectionName, batchSize = 300) {
   const colRef = db.collection(collectionName);
 
@@ -100,7 +96,6 @@ function randomOrderStatus() {
   return statuses[Math.floor(Math.random() * statuses.length)];
 }
 
-// --------- customOptions แบบสมเหตุสมผลตาม type ----------
 function buildCustomOptionsByType(type) {
   switch (type) {
     case "nigiri":
@@ -183,12 +178,11 @@ function pickCustomOptionFromMenu(menu) {
   return picked;
 }
 
-// ---------------- SEED FUNCTION ----------------
 async function seed() {
   try {
     console.log("🚀 RESET + Seeding Sushi Data (AUTO-ID ALL, NO KEY FIELDS)...");
 
-    // 0) RESET
+
     const collectionsToReset = ["orders", "tables", "menus", "categories"];
     for (const col of collectionsToReset) {
       console.log(`🧹 clearing ${col}...`);
@@ -196,7 +190,6 @@ async function seed() {
     }
     console.log("✔ cleared all target collections");
 
-    // 1) Categories (auto-id) — ไม่เขียน key ลง Firestore
     const categoriesCol = db.collection("categories");
     const categoryDocs = [];
 
@@ -207,14 +200,12 @@ async function seed() {
         isActive: cat.isActive,
       });
 
-      // เก็บ key ไว้ใน memory เท่านั้นเพื่อ mapping
       categoryDocs.push({ id: docRef.id, key: cat.key, name: cat.name, order: cat.order });
     }
     console.log("✔ categories:", categoryDocs.length);
 
     const categoryIdByType = new Map(categoryDocs.map((c) => [c.key, c.id]));
 
-    // 2) Menus (auto-id) — ไม่เขียน key ลง Firestore
     const menusCol = db.collection("menus");
     const menuDocs = [];
 
@@ -237,7 +228,7 @@ async function seed() {
     }
     console.log("✔ menus:", menuDocs.length);
 
-    // 3) Tables (auto-id + tableCode field)
+
     const tablesCol = db.collection("tables");
     const tableDocs = [];
 
@@ -247,7 +238,7 @@ async function seed() {
     }
     console.log("✔ tables:", tableDocs.length);
 
-    // 4) Orders (auto-id)
+
     const ordersCol = db.collection("orders");
 
     for (let i = 0; i < 10; i++) {
@@ -277,7 +268,7 @@ async function seed() {
 
       const orderRef = await ordersCol.add({
         tableId: table.id,
-        tableCode: table.tableCode, // ช่วย query ตามโต๊ะได้ง่าย
+        tableCode: table.tableCode, 
         status,
         totalPrice,
         isPaid: status === "Paid",
